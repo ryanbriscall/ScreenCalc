@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScreenCalc</title>
+<meta name="description" content="Screen/image size calculator to calculate height by any width, maintaining aspect ratio.">
+
+<style>
+:root { font-size: 16px; }
+@media (min-width: 320px) and (max-width: 1200px) {
+	:root { font-size: calc(16px + (28 - 16) * ((100vw - 320px) / (1200 - 320))); }
+}
+@media (min-width: 1200px) { :root { font-size: 28px; } }
+html { font-family: sans-serif; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+body {
+	line-height: 1.5;
+	font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	margin: 0.8em;
+	text-align: center;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* More */
+button, input, select, textarea, .textarea { font-family: inherit; font-size: inherit; outline: none; }
+textarea, .textarea { line-height: 1.1; }
+input[type="text"], input[type="file"], textarea, .textarea { appearance: textfield; font-size: 0.75em; border: 0.2em inset #808080; }
+input[type="file"] { padding: 0.1em; }
+input[type="number"] { width: 4em; }
+button, input[type="button"], input[type="submit"] { border: 0.2em outset #808080; }
+button:active, button.active, 
+input[type="button"]:active, input[type="button"].active
+input[type="submit"]:active, input[type="submit"].active { border: 0.2em inset #808080; }
+button:disabled,
+input[type="button"]:disabled,
+input[type="submit"]:disabled { border: 0.2em solid #808080; }
+
+</style>
+<style id="cssdark" media="none">
+body { color: #eee; background: #111; }
+input, select, button, textarea { color: #ccc; background: #333; }
+</style>
+
+<script>
+	var items = {
+		"NES":[256,224],
+		"GB":[160,144],
+		"GBA":[240,160],
+		"DOS":[320,200],
+		"4:3":[320,240],
+		"16:9":[320,180],
+		"WATCH":[72,72],
+	};
+	</script>
+	
+</head>
+<body>
+<script>cssdark.setAttribute('media', '');</script>
+
+<div id="app"></div>
+
+<script>
+function calc() {
+	if (x.value != '' && y.value != '') {
+		aspect.value = (x.value / y.value).toFixed(6);
+		ratio(x.value, y.value);
+	}
+}
+function rex() {
+	if (locker.classList.contains('active')) {
+		y.value = (x.value / aspect.value).toFixed(0);
+		return;
+	}
+	calc();
+}
+function rey() {
+	if (locker.classList.contains('active')) {
+		x.value = (y.value * aspect.value).toFixed(0);
+		return;
+	}
+	calc();
+}
+function preset(xy) {
+	x.value = xy[0];
+	y.value = xy[1];
+	calc();
+	if (!locker.classList.contains('active')) { locker.classList.add('active'); }
+}
+function lock() {
+	if (locker.classList.contains('active')) { locker.classList.remove('active'); }
+	else { locker.classList.add('active'); }
+}
+function ratio(x, y) {
+	var ratio;
+	if (y == x) {
+		ratio = '1:1';
+	}
+	else {
+		var mode = 'square';
+		if (y > x) {
+			dividend  = y;
+			divisor   = x;
+			mode      ='portrait';
+		}
+		else if (x > y) {
+			dividend   = x;
+			divisor    = y;
+			mode       = 'landscape';
+		}
+
+		var gcd = -1;
+		while (gcd == -1) {
+			remainder = dividend%divisor;
+			if (remainder == 0) {
+				gcd = divisor;
+			}
+			else {
+				dividend  = divisor;
+				divisor   = remainder;
+			}
+		}
+
+		ratio = (x/gcd)+':'+(y/gcd);
+	}
+	aspect2.value = ratio;
+}
+var html = ``;
+html += `<table style="margin:0 auto"><tr><td>`;
+Object.keys(items).forEach(function(a) {
+	html += `<div style="line-height:1.75"><button onclick="preset(items['${a}'])">${a}</button></div>`;
+});
+html += `</td>`;
+html += `
+<td><button id="locker" onclick="lock()">×</button></td>
+<td>
+	<input id="x" style="width:3.1em;text-align:center" onchange="rex()" onkeyup="rex()" type="text"><br>
+	<input id="y" style="width:3.1em;text-align:center" onchange="rey()" onkeyup="rey()" type="text">
+</td>
+<td>
+	<input id="aspect" style="width:5.1em;text-align:center" type="text"
+	><input id="aspect2" style="width:5.1em;text-align:center" type="text">
+</td>
+</tr></table>
+`;
+html += `</td></tr></table>`;
+app.innerHTML = html;
+</script>
+</body>
+<!--
+In the NES era, the safe area boundary was 24 pixels from the top and bottom and 16 from the left and right, according to the "background planning sheets" used during the development of Super Mario Bros. and The Legend of Zelda. TVs made in the 1970s weren't made as precisely. Nowadays, if you're developing for NTSC NES, it should be safe to put text out to 8 pixels from the left and right, 16 from the top, and 11 from the bottom.
+
+SNES games have a resolution of 256x224 (8:7) but are meant for 4:3 screens
+They were just designed knowing the pixels weren't square. So the "scaled" image you see would have been the artistic vision.
+
+http://wiki.nesdev.com/w/index.php/PPU_ntsc_pal_difference
+http://wiki.nesdev.com/w/index.php/Overscan
+-->
+</html>
